@@ -1,0 +1,46 @@
+name: Deploy to Netlify
+
+on:
+  workflow_dispatch:
+  # Add any other triggers you need (e.g., pushes to main)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create GitHub Repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          # Create a new GitHub repository using the template
+          curl -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/hungryram/hugo-ihomefinder-2023/generate \
+            -d '{
+              "owner": "hungryram",
+              "name": "new-client-repo",
+              "private": false
+            }'
+
+      - name: Create Netlify Site
+        env:
+          NETLIFY_TOKEN: ${{ secrets.NETLIFY_TOKEN }}
+        run: |
+          # Make a POST request to the Netlify API to create a new site
+          curl -X POST \
+            -H "Authorization: Bearer $NETLIFY_TOKEN" \
+            -d '{
+              "name": "client-site-name",  # Customize the site name
+              "repo": "https://github.com/hungryram/hugo-ihomefinder-2023.git",
+              "build_settings": {
+                "base": "/",
+                "cmd": "hugo",
+                "dir": ""
+              }
+            }' \
+            https://api.netlify.com/api/v1/sites
